@@ -4,6 +4,7 @@ from flask import Flask, request, jsonify
 import Utils
 import threading
 import LangMinion
+from loguru import logger
 app = Flask(__name__)
 lang_minion_instance = ''
 
@@ -23,17 +24,17 @@ def send_message(channel, text):
         "text": text,
         "mrkdwn": True
     }
-    print(f'send_message(): send {payload} to {channel}')
+    logger.debug(f'send_message(): send {payload} to {channel}')
     response = requests.post(SLACK_POST_MESSAGE_URL, json=payload, headers=headers)
     if not response.json().get("ok"):
-        print("发送失败：", response.json())
+        logger.error("发送失败：", response.json())
 
 def process_message(user, text):
     ret = lang_minion_instance.respond('', text)
     return f"{ret}"
 
 def process_command(cmd, data):
-    print(f'process_command(): Recieved command {cmd}')
+    logger.debug(f'process_command(): Recieved command {cmd}')
     if data:
         text = data['text']
         text = Utils.get_pure_slack_message(text)
@@ -45,9 +46,9 @@ def process_command(cmd, data):
 
 @app.route('/slack/commands/<path:subpath>', methods=['POST'])
 def slack_commands(subpath):
-    print("Content-Type:", request.content_type)
+    logger.debug("Content-Type:", request.content_type)
     data = request.form.to_dict()
-    print(f'slack_commands called! subpath = {subpath}, data =\n{data}')
+    logger.debug(f'slack_commands called! subpath = {subpath}, data =\n{data}')
     if lang_minion_instance.can_handle_command(subpath):
         text = data['text']
         text = Utils.get_pure_slack_message(text)
@@ -58,7 +59,7 @@ def slack_commands(subpath):
 @app.route("/slack/events", methods=["POST"])
 def slack_events():
     data = request.json
-    print(f'message incoming, data = {data}')
+    logger.debug(f'message incoming, data = {data}')
 
     # 1. Slack 第一次会发送 challenge 验证
     if "challenge" in data:

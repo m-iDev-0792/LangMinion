@@ -3,6 +3,7 @@ import json
 import requests
 from openai import AzureOpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from loguru import logger
 
 LangMinion_prompt_revise = "I'll input a sentence or paragraph of English text, and you'll need to check for basic grammatical errors, suggest some changes to make it more consistent with American English usage, and explain your changes. Just give your direct answers, don't say other things or ask me other questions."
 LangMinion_prompt_translate = "You are an English translator. When I send you content containing Chinese, you need to translate the entire text into English and provide at least three possible translation results. Just give your direct answers, don't say other things or ask me other questions."
@@ -44,7 +45,7 @@ class OpenAILangMinionBackend():
         self.client = client
 
     def respond(self, prompt, text):
-        print(f'respond(): respont text [{text}] with prompt [{prompt}]')
+        logger.debug(f'respond(): respont text [{text}] with prompt [{prompt}]')
         message_list = []
         if prompt:
             message_list.append({"role": "system", "content": prompt})
@@ -54,7 +55,7 @@ class OpenAILangMinionBackend():
             messages=message_list
         )
         ret = completion.choices[0].message.content
-        print(f"OpenAILangMinionBackend.respond(): {ret}")
+        logger.debug(f"OpenAILangMinionBackend.respond(): {ret}")
         return ret
     
     def can_handle_command(self, cmd):
@@ -64,7 +65,7 @@ class OpenAILangMinionBackend():
         prompt = ''
         if cmd in LangMinion_prompt_dict:
             prompt = LangMinion_prompt_dict[cmd]
-        # print(f'respond_command(): cmd [{cmd}]-> prompt [{prompt}]')
+        # logger.debug(f'respond_command(): cmd [{cmd}]-> prompt [{prompt}]')
         if cmd in LangMinion_text_preprocess_dict:
             text = LangMinion_text_preprocess_dict[cmd](text)
         return self.respond(prompt, text)
