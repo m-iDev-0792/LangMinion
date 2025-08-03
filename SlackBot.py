@@ -52,7 +52,7 @@ def slack_commands(subpath):
         text = data['text']
         text = Utils.get_pure_slack_message(text)
         threading.Thread(target=process_command, args=(subpath, data), daemon=True).start()
-        return f"Command [{subpath}]\nArgument [{text}]", 200
+        return f"Command [{subpath}]\nArgument [{text}]\nProcessing, please wait...", 200
     return f"Unsupported command [{subpath}]", 200
 
 @app.route("/slack/events", methods=["POST"])
@@ -92,4 +92,8 @@ if __name__ == "__main__":
     api_key = os.environ.get('OPENAI_API_KEY')
     end_point = os.environ.get('OPENAI_AZURE_ENDPOINT')
     lang_minion_instance = LangMinion.OpenAILangMinionBackend("gpt-4.1", api_key, end_point)
-    app.run(port=3000, debug=True)
+    app_port=3000
+    app_port_str = os.environ.get('APP_PORT')
+    if app_port_str:
+        app_port = int(app_port_str)
+    app.run(port=app_port, debug=True)

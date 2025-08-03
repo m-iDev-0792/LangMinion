@@ -26,17 +26,18 @@ def markdown_to_slack_mrkdwn(markdown_text):
     """
     将标准Markdown转换为Slack mrkdwn格式
     """
-    # 复制原文本避免修改原始内容
     slack_text = markdown_text
     
-    # 1. 处理粗体：**text** 或 __text__ -> *text*
-    slack_text = re.sub(r'\*\*(.*?)\*\*', r'*\1*', slack_text)
-    slack_text = re.sub(r'__(.*?)__', r'*\1*', slack_text)
+    # 1.1 处理粗体：**text** 或 __text__ -> *text* (临时换成@text@格式)
+    slack_text = re.sub(r'\*\*(.*?)\*\*', r'@\1@', slack_text)
+    slack_text = re.sub(r'__(.*?)__', r'@\1@', slack_text)
     
     # 2. 处理斜体：*text* -> _text_ (需要小心不与粗体冲突)
     # 先处理没有被转换的单个*
     slack_text = re.sub(r'(?<!\*)\*(?!\*)([^*]+?)(?<!\*)\*(?!\*)', r'_\1_', slack_text)
-    
+    # 1.2 处理完斜体之后再进行粗体的最终处理
+    slack_text = re.sub(r'@(.*?)@', r'*\1*', slack_text)
+
     # 3. 处理删除线：~~text~~ -> ~text~
     slack_text = re.sub(r'~~(.*?)~~', r'~\1~', slack_text)
     
